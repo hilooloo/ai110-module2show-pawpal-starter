@@ -4,14 +4,39 @@
 
 **a. Initial design**
 
+## Core Actions
+1. Add a new pet to the system.
+2. Schedule a care task for a pet.
+3. View today's tasks sorted by time.
+
+### Building Blocks
+- **Owner**
+  - Attributes: `name` (str), `pets` (dict)
+  - Methods: `add_pet()`, `get_all_tasks()`
+- **Pet**
+  - Attributes: `name` (str), `species` (str), `tasks` (list)
+  - Methods: `add_task()`
+- **Task**
+  - Attributes: `description` (str), `time_str` (str), `frequency` (str), `is_completed` (bool)
+  - Methods: `mark_complete()`
+- **Scheduler**
+  - Methods: `sort_by_time()`, `filter_tasks()`, `check_conflicts()`
+
 - Briefly describe your initial UML design.
+My app separates pet information from the scheduling logic to keep the code organized.
 - What classes did you include, and what responsibilities did you assign to each?
+**Owner**: Manages the owner's profile and a list of pets.
+**Pet**: Stores pet details and a list of their specific tasks.
+**Task**: Keeps track of one single activity, including its name, priority, and completion status.
+**Scheduler**: The brain of the app that handles sorting and filtering tasks.
 
 **b. Design changes**
 
 - Did your design change during implementation?
+Yes, my design changed significantly after running the AI skeleton review.
 - If yes, describe at least one change and why you made it.
-
+**What changed**: The AI assistant pointed out three major architectural risks: data synchronization risks between `Owner` and `Pet` tasks, tight coupling of the `Scheduler` to a single pet instance, and the absence of a start-time tracker for scheduling outputs.
+**Why**: To fix these bottlenecks, I accepted the AI's recommendations to make `Pet` the single source of truth for its own tasks, decouple the `Scheduler` so it can handle multiple pets, and prepare a structured concept for tracking assigned time slots rather than passing fragile raw dictionaries around.
 ---
 
 ## 2. Scheduling Logic and Tradeoffs

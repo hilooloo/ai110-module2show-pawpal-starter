@@ -1,0 +1,32 @@
+classDiagram
+    class Owner {
+        +str name
+        +dict pets
+        +add_pet(pet: Pet) None
+        +get_all_tasks() list
+    }
+
+    class Pet {
+        +str name
+        +str species
+        +list tasks
+        +add_task(task: Task) None
+    }
+
+    class Task {
+        +str description
+        +str time_str
+        +str frequency
+        +bool is_completed
+        +mark_complete() None
+    }
+
+    class Scheduler {
+        +sort_by_time(tasks: list) list
+        +filter_tasks(tasks: list, status: bool) list
+        +check_conflicts(tasks: list) list
+    }
+
+    Owner "1" *-- "many" Pet : owns
+    Pet "1" *-- "many" Task : tracks
+    Scheduler ..> Owner : manages

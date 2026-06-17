@@ -54,6 +54,23 @@ Paste a sample of your app's CLI or Streamlit output here so a reader can see wh
 #   ...
 ```
 
+```text
+Today's Schedule
+Daily plan for Jordan's pets
+========================================
+
+Biscuit (dog):
+  [todo] 07:30 - Morning walk (daily)
+  [todo] 08:00 - Feeding (daily)
+  [todo] 09:00 - Flea medication (weekly)
+
+Mochi (cat):
+  [todo] 08:30 - Feeding (daily)
+  [todo] 18:00 - Litter box clean (daily)
+
+Progress: 0/5 tasks completed
+
+
 ## 🧪 Testing PawPal+
 
 ```bash
