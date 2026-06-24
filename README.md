@@ -85,6 +85,20 @@ Sample test output:
 
 ```
 # Paste your pytest output here
+========================================================================================== test session starts ==========================================================================================
+platform win32 -- Python 3.13.14, pytest-9.0.3, pluggy-1.6.0
+rootdir: C:\Users\hiloo\OneDrive\Desktop\Jiyoung\CodePath\AI110\Codepath_AI\ai110-module2show-pawpal-starter
+plugins: anyio-4.13.0
+collected 30 items                                                                                                                                                                                       
+
+tests\test_pawpal.py ..............................                                                                                                                                                [100%]
+
+========================================================================================== 30 passed in 0.10s ===========================================================================================
+
+Confidence Level
+5 stars
+All 30 happy paths and edge case tests passed successfully.
+
 ```
 
 ## 📐 Smarter Scheduling
