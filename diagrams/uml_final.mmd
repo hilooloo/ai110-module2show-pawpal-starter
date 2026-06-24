@@ -4,9 +4,10 @@ classDiagram
         +str time_str
         +str frequency
         +bool is_completed
-        +date last_completed_date
+        +Optional~date~ last_completed_date
         +mark_complete() None
-        +get_next_due_date() date
+        +get_next_due_date() Optional~date~
+        +__str__() str
     }
 
     class Pet {
@@ -14,25 +15,27 @@ classDiagram
         +str species
         +list~Task~ tasks
         +add_task(task: Task) None
+        +__str__() str
     }
 
     class Owner {
         +str name
         +list~Pet~ pets
         +add_pet(pet: Pet) None
-        +get_all_tasks() list
+        +get_all_tasks() list~tuple~
+        +__str__() str
     }
 
     class Scheduler {
         +Owner owner
-        +get_all_tasks() list
-        +get_pending_tasks() list
-        +get_completed_tasks() list
-        +get_tasks_by_pet(pet: Pet) list
-        +get_tasks_by_frequency(frequency: str) list
-        +sort_by_time(pairs: list) list
-        +generate_schedule() list
-        +check_conflicts() list
+        +get_all_tasks() list~tuple~
+        +get_pending_tasks() list~tuple~
+        +get_completed_tasks() list~tuple~
+        +get_tasks_by_pet(pet: Pet) list~Task~
+        +get_tasks_by_frequency(frequency: str) list~tuple~
+        +sort_by_time(pairs: list) list~tuple~
+        +generate_schedule() list~tuple~
+        +check_conflicts() list~str~
         +mark_task_complete(task: Task) None
         +reset_daily_tasks() None
         +generate_summary() str

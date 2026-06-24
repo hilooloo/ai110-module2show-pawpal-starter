@@ -22,6 +22,17 @@ Your final app should:
 - Display the plan clearly (and ideally explain the reasoning)
 - Include tests for the most important scheduling behaviors
 
+## ✨ Features
+
+- **Chronological Sorting** — `Scheduler.sort_by_time()` orders all `(Pet, Task)` pairs by `time_str` in strict `HH:MM` ascending order. Malformed or non-standard time strings are automatically pushed to the end using a `"99:99"` sentinel, preventing silent sort failures.
+- **Non-blocking Conflict Detection** — `Scheduler.check_conflicts()` scans all time-sorted tasks and flags any two or more tasks scheduled at the exact same time — across pets or on the same pet. Warnings are returned as plain strings and surfaced live in the Streamlit UI via `st.warning()` without stopping schedule generation.
+- **Calendar Recurrence Logic** — `Task.get_next_due_date()` uses `datetime.timedelta` to compute when a task is next due: `+1 day` for `"daily"` tasks and `+7 days` for `"weekly"` tasks. `mark_complete()` simultaneously stamps `last_completed_date = date.today()` so recurrence tracking stays in sync automatically.
+- **Status Filtering** — `Scheduler.get_pending_tasks()` and `Scheduler.get_completed_tasks()` filter live `Task` objects, so any call to `mark_complete()` is reflected immediately with no re-fetching.
+- **Per-pet and Per-frequency Filtering** — `get_tasks_by_pet()` and `get_tasks_by_frequency()` return `(Pet, Task)` pairs so callers always know which pet each task belongs to. Frequency matching is case-insensitive.
+- **Daily Reset** — `Scheduler.reset_daily_tasks()` clears completion status only for `"daily"` tasks, leaving `"weekly"` and `"as-needed"` tasks untouched.
+- **Streamlit Session Persistence** — Owner, pets, and tasks are stored in `st.session_state` so all data survives button clicks, widget interactions, and rerenders without being reset.
+- **Validated Time Input** — The UI uses `st.time_input()` instead of a free-text field, guaranteeing every stored `time_str` is a zero-padded `"HH:MM"` string compatible with `sort_by_time()`.
+
 ## Getting started
 
 ### Setup
@@ -42,33 +53,71 @@ pip install -r requirements.txt
 6. Connect your logic to the Streamlit UI in `app.py`.
 7. Refine UML so it matches what you actually built.
 
-## 🖥️ Sample Output
+## 🖥️ Sample CLI Output
 
-Paste a sample of your app's CLI or Streamlit output here so a reader can see what a generated plan looks like:
-
-```
-# e.g.:
-# Daily plan for Biscuit (Golden Retriever):
-#   08:00 — Morning walk (30 min) [priority: high]
-#   09:00 — Feeding (10 min) [priority: high]
-#   ...
-```
+Run `python main.py` to see the scheduler in action. The output below demonstrates
+chronological sorting across two pets, live conflict detection, and status filtering.
 
 ```text
-Today's Schedule
+==================================================
+TEST 1: generate_summary() - pending tasks by pet
+==================================================
+*** SCHEDULING CONFLICTS DETECTED ***
+  WARNING - Conflict at 08:30: Biscuit: 'Afternoon treat', Mochi: 'Breakfast'
+
 Daily plan for Jordan's pets
 ========================================
 
 Biscuit (dog):
-  [todo] 07:30 - Morning walk (daily)
-  [todo] 08:00 - Feeding (daily)
-  [todo] 09:00 - Flea medication (weekly)
+  [todo] 08:30 - Afternoon treat (daily)
+  [todo] 14:00 - Flea medication (weekly)
+  [todo] 19:00 - Evening walk (daily)
 
 Mochi (cat):
-  [todo] 08:30 - Feeding (daily)
-  [todo] 18:00 - Litter box clean (daily)
+  [todo] 08:30 - Breakfast (daily)
+  [todo] 14:30 - Playtime (daily)
+  [todo] 19:30 - Dinner feeding (daily)
 
-Progress: 0/5 tasks completed
+Progress: 1/7 tasks completed
+
+==================================================
+TEST 2: sort_by_time() - all tasks, time-sorted
+==================================================
+  07:30  [Biscuit]  Morning walk
+  08:30  [Biscuit]  Afternoon treat
+  08:30  [Mochi]  Breakfast
+  14:00  [Biscuit]  Flea medication
+  14:30  [Mochi]  Playtime
+  19:00  [Biscuit]  Evening walk
+  19:30  [Mochi]  Dinner feeding
+
+==================================================
+TEST 3: get_pending_tasks() - incomplete only
+==================================================
+  Biscuit: Evening walk (19:00)
+  Biscuit: Flea medication (14:00)
+  Biscuit: Afternoon treat (08:30)
+  Mochi: Dinner feeding (19:30)
+  Mochi: Playtime (14:30)
+  Mochi: Breakfast (08:30)
+
+==================================================
+TEST 4: get_completed_tasks() - completed only
+==================================================
+  Biscuit: Morning walk (07:30)
+
+==================================================
+TEST 5: get_tasks_by_pet(dog) - Biscuit only
+==================================================
+  [todo] 19:00  Evening walk
+  [done] 07:30  Morning walk
+  [todo] 14:00  Flea medication
+  [todo] 08:30  Afternoon treat
+
+==================================================
+TEST 6: get_tasks_by_frequency('weekly')
+==================================================
+  Biscuit: Flea medication (14:00)
 ```
 
 ## 🧪 Testing PawPal+
@@ -112,12 +161,24 @@ All 30 happy paths and edge case tests passed successfully.
 
 ## 📸 Demo Walkthrough
 
-Describe your app in numbered steps so a reader can follow along without watching a video:
+Launch the app with `streamlit run app.py`, then follow these steps:
 
-1. <!-- Describe this step -->
-2. <!-- Describe this step -->
-3. <!-- Describe this step -->
-4. <!-- Describe this step -->
-5. <!-- Add more steps as needed -->
+1. **Enter your name** — Type your name in the Owner field and click **Save**. The name appears in the generated schedule header.
 
-**Screenshot or video** *(optional)*: <!-- Insert a screenshot or link to a demo video here -->
+2. **Add your pets** — Enter a pet name (e.g. `Biscuit`), select a species, and click **Add pet**. Repeat for each pet. Each registered pet appears as a metric card showing its name and current task count.
+
+3. **Schedule tasks** — Select a pet from the dropdown, enter a description (e.g. `Morning walk`), pick a time using the time picker (always produces a valid `HH:MM` string), choose a frequency (`daily`, `weekly`, or `as-needed`), and click **Add task**.
+
+4. **Observe live conflict warnings** — If two tasks share the same time across any pets, a `st.warning()` banner appears immediately above the task table on the next rerender — no button click required. Example: scheduling both Biscuit's `Afternoon treat` and Mochi's `Breakfast` at `08:30` produces: `⚠️ WARNING - Conflict at 08:30: Biscuit: 'Afternoon treat', Mochi: 'Breakfast'`.
+
+5. **View the sorted task table** — The Tasks section displays all tasks sorted strictly by time via `Scheduler.sort_by_time()`, grouped with Pet, Time, Description, Frequency, and Status columns.
+
+6. **Generate today's schedule** — Click **Generate schedule** (primary button at the bottom). The app shows:
+   - Three metric cards: Total tasks / Pending / Completed
+   - A chronologically sorted table of pending tasks only, with a **Next due** column populated by `Task.get_next_due_date()`
+   - A `st.success()` banner if all tasks are complete
+
+**Key scheduler behaviors demonstrated:**
+- Tasks added out of order are always re-sorted chronologically before display
+- Conflict warnings appear live as soon as a duplicate time is added, without blocking the schedule
+- Completing a task removes it from the pending table and increments the Completed metric instantly
