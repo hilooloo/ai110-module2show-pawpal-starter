@@ -69,7 +69,7 @@ Mochi (cat):
   [todo] 18:00 - Litter box clean (daily)
 
 Progress: 0/5 tasks completed
-
+```
 
 ## 🧪 Testing PawPal+
 
@@ -89,14 +89,12 @@ Sample test output:
 
 ## 📐 Smarter Scheduling
 
-> Fill in once you've implemented scheduling logic.
-
 | Feature | Method(s) | Notes |
 |---------|-----------|-------|
-| Task sorting | | e.g., by priority, duration |
-| Filtering | | e.g., skip tasks if time runs out |
-| Conflict handling | | e.g., overlapping time slots |
-| Recurring tasks | | e.g., daily vs. weekly |
+| Task sorting | `Scheduler.sort_by_time()` | Sorts `(Pet, Task)` pairs by `time_str` in `"HH:MM"` format ascending. Strings that don't match the format are pushed to the end using a `"99:99"` sentinel, preventing silent sort errors. |
+| Filtering by status / pet | `Scheduler.get_pending_tasks()`, `Scheduler.get_completed_tasks()`, `Scheduler.get_tasks_by_pet()`, `Scheduler.get_tasks_by_frequency()` | Each method returns `(Pet, Task)` pairs so callers always know which pet a task belongs to. Filters operate on live `Task` objects, so `mark_complete()` is reflected immediately without re-fetching. |
+| Conflict detection | `Scheduler.check_conflicts()` | Groups all time-sorted tasks by `time_str` using a `defaultdict`. Any time slot with more than one task produces a named warning string. Non-blocking — warnings are returned as a list and prepended to `generate_summary()` output without stopping schedule generation. |
+| Recurring task logic | `Task.get_next_due_date()` | Uses `datetime.timedelta` to compute the next due date: `+1 day` for `"daily"`, `+7 days` for `"weekly"`, `None` for `"as-needed"`. `mark_complete()` automatically stamps `last_completed_date = date.today()` so recurrence tracking stays in sync. |
 
 ## 📸 Demo Walkthrough
 

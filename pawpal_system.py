@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from datetime import date, timedelta
 from typing import Optional
 
 
@@ -10,10 +11,20 @@ class Task:
     time_str: str        # e.g. "08:00", "12:30"
     frequency: str       # e.g. "daily", "weekly", "as-needed"
     is_completed: bool = False
+    last_completed_date: Optional[date] = None
 
     def mark_complete(self) -> None:
-        """Mark this task as completed."""
+        """Mark this task as completed and record today's date."""
         self.is_completed = True
+        self.last_completed_date = date.today()
+
+    def get_next_due_date(self) -> Optional[date]:
+        """Return the next calendar date this task is due using timedelta, or None if frequency is 'as-needed'."""
+        if self.frequency == "daily":
+            return date.today() + timedelta(days=1)
+        if self.frequency == "weekly":
+            return date.today() + timedelta(weeks=1)
+        return None
 
     def __str__(self) -> str:
         """Return a formatted one-line string representation of the task."""
@@ -96,7 +107,7 @@ class Scheduler:
     # ── organization ───────────────────────────────────────────────────────
 
     def sort_by_time(self, pairs: Optional[list[tuple[Pet, Task]]] = None) -> list[tuple[Pet, Task]]:
-        """Sort (pet, task) pairs by time_str ascending. Non-HH:MM values go last."""
+        """Sort (pet, task) pairs by time_str ascending; strings not in 'HH:MM' format are sorted to the end."""
         if pairs is None:
             pairs = self.get_all_tasks()
 
@@ -113,6 +124,20 @@ class Scheduler:
         """Return all pending tasks sorted by scheduled time."""
         return self.sort_by_time(self.get_pending_tasks())
 
+    def check_conflicts(self) -> list[str]:
+        """Return a non-blocking warning string for each group of tasks that share the exact same time_str."""
+        from collections import defaultdict
+        time_map: dict[str, list[tuple[Pet, Task]]] = defaultdict(list)
+        for pet, task in self.sort_by_time():
+            time_map[task.time_str].append((pet, task))
+
+        warnings = []
+        for time_str, pairs in time_map.items():
+            if len(pairs) > 1:
+                names = ", ".join(f"{p.name}: '{t.description}'" for p, t in pairs)
+                warnings.append(f"WARNING - Conflict at {time_str}: {names}")
+        return warnings
+
     # ── management ─────────────────────────────────────────────────────────
 
     def mark_task_complete(self, task: Task) -> None:
@@ -128,8 +153,16 @@ class Scheduler:
     # ── display ────────────────────────────────────────────────────────────
 
     def generate_summary(self) -> str:
-        """Return a human-readable schedule summary grouped by pet, sorted by time."""
-        lines = [f"Daily plan for {self.owner.name}'s pets", "=" * 40]
+        """Return a formatted daily plan grouped by pet; prepends any conflict warnings detected by check_conflicts()."""
+        lines = []
+        conflicts = self.check_conflicts()
+        if conflicts:
+            lines.append("*** SCHEDULING CONFLICTS DETECTED ***")
+            for warning in conflicts:
+                lines.append(f"  {warning}")
+            lines.append("")
+
+        lines += [f"Daily plan for {self.owner.name}'s pets", "=" * 40]
 
         total = len(self.get_all_tasks())
         done = len(self.get_completed_tasks())

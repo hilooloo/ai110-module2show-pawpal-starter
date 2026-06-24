@@ -49,7 +49,9 @@ Yes, my design changed significantly after running the AI skeleton review.
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
+It only warns us if two tasks are at the exact same time (like both at 08:30). It cannot check if a long task overlaps with a short task (like an 08:00 walk overlapping with an 08:15 feeding).
 - Why is that tradeoff reasonable for this scenario?
+Most pet tasks, like giving food or medicine, take only a few minutes. Checking exact time matches is simple, fast, and works well enough for a basic app.
 
 ---
 
